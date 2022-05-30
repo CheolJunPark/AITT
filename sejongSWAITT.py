@@ -50,17 +50,65 @@ for i in all_lecs:
 
 
 class command:
-    def start(update, context):
+    def cmd_task_buttons(update, context):
+        task_buttons = [[
+            InlineKeyboardButton('1. 사용 방법', callback_data=1), InlineKeyboardButton(
+                '2. 정보 입력', callback_data=2)
+        ], [
+            InlineKeyboardButton('3. 추천 시간표', callback_data=3)
+        ], [
+            InlineKeyboardButton('4. 취소', callback_data=4)
+        ]]
+
+        reply_markup = InlineKeyboardMarkup(task_buttons)
+
         name = update.message.chat.first_name
-        update.message.reply_text(
-            "🇰🇷 안녕하세요 " + name + "님 13조 시간표 추천 서비스입니다\n먼저 본인의 기이수성적파일을 업로드 하세요.")
+        context.bot.send_message(
+            chat_id=update.message.chat_id, text='🇰🇷 안녕하세요 ' + name + '님 13조 시간표 추천 서비스입니다\n원하시는 작업을 선택해주세요.', reply_markup=reply_markup
+        )
+
+    def cb_button(update, context):
+        query = update.callback_query
+        data = query.data
+
+        context.bot.send_chat_action(
+            chat_id=update.effective_user.id, action=ChatAction.TYPING
+        )
+
+        if data == '4':
+            context.bot.edit_message_text(
+                text='작업이 취소되었습니다. 다시 보고 싶으시다면 /start를 입력해주세요.', chat_id=query.message.chat_id, message_id=query.message.message_id
+            )
+        elif data == '3':
+            pass  # 추천 시간표 보여주기
+        else:
+            if data == '1':
+                command.howtouse(update, context)
+            elif data == '2':
+                command.instruction(update, context)
+            context.bot.send_message(
+                chat_id=update.effective_chat.id, text='[{}] 작업을 완료하였습니다.  다시 보고 싶으시다면 /start를 입력해주세요.'.format(
+                    data)
+            )
+
+    def howtouse(update, context):
+        query = update.callback_query
+        data = query.data
+        context.bot.edit_message_text(
+            text='1. 본인의 학사정보시스템에서 기이수성적파일 다운로드 받으세요.\n2. 다운로드한 기이수성적파일을 업로드 하세요.\n    => 본인의 미수강 전공과목이 나옵니다\n3. /start를 다시 입력해 "정보 입력"란을 누른 후, 안내사항을 따라 정보를 입력하세요. (정보를 모두 입력하지 않으면, 추천 시간표가 뜨지 않습니다)\n4. /start를 다시 입력해 "추천 시간표"란을 누르면 추천 시간표를 보여드립니다.', chat_id=query.message.chat_id, message_id=query.message.message_id
+        )
+
+    def instruction(update, context):
+        query = update.callback_query
+        data = query.data
+        context.bot.edit_message_text(
+            text='1. 미수강 과목 중, 듣고 싶은 과목 3개를 입력하세요.\n2. 교수, 수업, 과제, 시험, 학점 중에서 순서대로 1순위부터 5순위까지 입력해주세요.\n\n예시)\n=>멀티미디어프로그래밍, 가상현실, 패턴인식\n=>35421', chat_id=query.message.chat_id, message_id=query.message.message_id
+        )
 
     def information_input(update, context):
-        update.message.reply_text(
-            "잠시만 기다려 주세요.")
         if ',' in update.message.text:
             wanted_lecs = update.message.text.split(', ')
-            update.message.reply_text("가장 듣고 싶은 강의:")
+            update.message.reply_text("듣고 싶은 강의:")
             for i in wanted_lecs:
                 update.message.reply_text(i)
         else:
@@ -99,8 +147,6 @@ class command:
         for i in untaken_lecs:
             update.message.reply_text(str(j) + ". " + i)
             j = j + 1
-        update.message.reply_text(
-            "1. 듣지 않은 과목 중, 가장 듣고 싶은 과목 3개를 입력하세요.\n2. 교수, 수업, 과제, 시험, 학점 중에서 순서대로 1순위부터 5순위까지 입력해주세요.\n\n예시)\n멀티미디어프로그래밍, 가상현실, 패턴인식\n35421")
 
     def image_downloader(update, context):
         context.bot.get_file(
@@ -108,7 +154,11 @@ class command:
         update.message.reply_text("이미지 업로드 완료")
 
 
-dispatcher.add_handler(CommandHandler('start', command.start))
+task_buttons_handler = CommandHandler('start', command.cmd_task_buttons)
+button_callback_handler = CallbackQueryHandler(command.cb_button)
+dispatcher.add_handler(button_callback_handler)
+dispatcher.add_handler(task_buttons_handler)
+
 
 # MessageHandler
 dispatcher.add_handler(MessageHandler(
