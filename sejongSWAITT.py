@@ -80,7 +80,15 @@ class command:
                 text='작업이 취소되었습니다. 다시 보고 싶으시다면 /start를 입력해주세요.', chat_id=query.message.chat_id, message_id=query.message.message_id
             )
         elif data == '3':
-            pass  # 추천 시간표 보여주기
+            df = pd.read_csv("time_table_based_ratio.csv")
+            lectures = list(df['lecture'])
+            professors = list(df['professor'])
+            class_times = list(df['class time'])
+
+            for lecture, professor, class_time in zip(lectures, professors, class_times):
+                context.bot.send_message(
+                    chat_id=update.effective_chat.id, text=("과목명: "+str(lecture)+"/교수명: "+str(professor)+"/강의시간: "+str(class_time)).format(
+                        data))
         else:
             if data == '1':
                 command.howtouse(update, context)
@@ -171,3 +179,4 @@ dispatcher.add_handler(MessageHandler(
 # 시작
 updater.start_polling()
 updater.idle()
+
