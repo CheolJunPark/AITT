@@ -80,7 +80,7 @@ class command:
                 text='작업이 취소되었습니다. 다시 보고 싶으시다면 /start를 입력해주세요.', chat_id=query.message.chat_id, message_id=query.message.message_id
             )
         elif data == '3':
-            df = pd.read_csv("time_table_based_ratio.csv")
+            df = pd.read_csv("time_table.csv")
             lectures = list(df['lecture'])
             professors = list(df['professor'])
             class_times = list(df['class time'])
@@ -179,4 +179,3 @@ dispatcher.add_handler(MessageHandler(
 # 시작
 updater.start_polling()
 updater.idle()
-
